@@ -16,13 +16,15 @@ def Lab7(list_groups):
 
     import arcpy
     arcpy.env.workspace = "C:\Users\patri\Desktop\Geoprogramming\Lab7"
-
+    
+    #Transform the shapefiles to a feature layer.
     arcpy.MakeFeatureLayer_management("HaysBG00.shp", "HaysBG00Lyr" )
     arcpy.MakeFeatureLayer_management("Hays_rivers.shp", "RiverLyr")
 
     totalpop = 0
     totallength = 0
 
+    #This will open a file and it will append the group column 
     with open("Lab7.txt", "a+") as tf:
         tf.write("Block_ID, Block_Count, Block_TotalPop, River_Length\n")
         with arcpy.da.SearchCursor("HaysBG00Lyr", ["GROUP"]) as cursor:
@@ -30,6 +32,7 @@ def Lab7(list_groups):
                 list_groups.append(row[0])
         list_groups = list(set(list_groups))
 
+        #This will add males and females to calculate total population
         Path = "C:\Users\patri\Desktop\Geoprogramming\Lab7\HaysBG00.shp"
         Fields = ["MALES" , "FEMALES","POP2000"]
         with arcpy.da.UpdateCursor(Path, Fields) as cursor:
@@ -37,6 +40,7 @@ def Lab7(list_groups):
                 row[2] = row[0] + row[1]
                 totalpop += row[2]
 
+        #This will calculate the length of the river by selecting it. 
         Field = ["Length"]
         arcpy.SelectLayerByLocation_management("HaysBG00Lyr","INTERSECT", "RiverLyr")
         sName = "River_Intersection.shp"
@@ -45,7 +49,8 @@ def Lab7(list_groups):
         with arcpy.da.UpdateCursor(Path2, Field) as cursor:
             for row2 in cursor:
                 totallength += row2[0]
-
+                
+        #This is an example of an sql selection 
         for block_id in list_groups:
             str_sql = """ "WHITE" > 500 and "GROUP" = ' {0} ' """.format(block_id)
             arcpy.SelectLayerByAttribute_management("HaysBG00Lyr","NEW_SELECTION",str_sql)
